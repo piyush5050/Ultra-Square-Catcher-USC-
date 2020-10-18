@@ -37,6 +37,7 @@
       var best = 0
       var lastTime = 0
       var PowerUpspawnRate = 0.8
+      var ThiefSpawnRate = 0.5
       var pause = false
       var stunBeginning = 0
 
@@ -84,8 +85,9 @@
         },
         limitation: 0,
         color: '#ff6699',
-        spawn: false,
-        spawnCondition: 60
+        spawn: 0,
+        exists: false
+        
       }
 
       var hero = {
@@ -132,7 +134,7 @@
         var norme = distance(target.y, target.x, object.y, object.x)
         object.speed.y = direction(target.y, object.y, object.limitation, norme)
         object.speed.x = direction(target.x, object.x, object.limitation, norme)
-        object.spawn = score >= object.spawnCondition
+        
       }
       function randomSpawn(object) {
         object.x = Math.random() * (canvas.width - object.width)
@@ -158,6 +160,7 @@
 
         //ennemi
         orientation(ennemi, hero)
+        ennemi.spawn = score >= ennemi.spawnCondition
 
         if (ennemi.spawn) {
           movement(ennemi)
@@ -165,8 +168,9 @@
         }
         //thief
         orientation(thief, reward)
+        thief.exists = (thief.spawn > ThiefSpawnRate) && (score >= 60)
 
-        if (thief.spawn) {
+        if (thief.exists)  {
           movement(thief)
           if (currentTime - stunBeginning >= STUN_LENGTH) {
             thief.limitation = Math.max(0.1, distance(reward.y, reward.x, thief.y, thief.x) / ADAPTATION_THIEF)
@@ -201,6 +205,9 @@
         if (collision(reward, hero)) {
           score += 1
           randomSpawn(reward)
+          if (thief.spawn < ThiefSpawnRate) {
+            thief.spawn = Math.random()
+          }
 
           if (powerUp.spawn < PowerUpspawnRate) {
             powerUp.spawn = Math.random()
@@ -213,9 +220,10 @@
             normalSpawn(hero,1)
           }
         }
-        if (thief.spawn) { //thief
+        if (thief.exists) { //thief
           if (collision(thief, hero)) {
             normalSpawn(thief, canvas.width/2)//only work if square canvas !
+            thief.spawn = Math.random()
             stunBeginning = currentTime
           }
           if (collision(thief, reward)) {
@@ -253,7 +261,7 @@
         if (ennemi.spawn) {
           drawSquare(ennemi)
         }
-        if (thief.spawn) {
+        if (thief.exists) {
           drawSquare(thief)
         }
         if (powerUp.spawn > PowerUpspawnRate) {
