@@ -104,6 +104,8 @@
           y: 0,
         },
         color: '#33FF66',
+        life: 3,
+        revivalPts: 0,
       }
 
       var reward = {
@@ -204,7 +206,13 @@
         //collisions
         if (collision(reward, hero)) {
           score += 1
+          hero.revivalPts += 1
           randomSpawn(reward)
+          if (hero.revivalPts >= 10 && hero.life != 3){
+            hero.life++
+            changeLife(hero.life)
+            hero.revivalPts = 0
+          }
           if (thief.spawn < ThiefSpawnRate) {
             thief.spawn = Math.random()
           }
@@ -215,9 +223,21 @@
         }
         if (ennemi.spawn) { //ennemy
           if (collision(ennemi, hero)) {
-            score -= Math.round(Math.sqrt(score)) - 2
-            normalSpawn(ennemi, canvas.width / 2)//only work if square canvas !
-            normalSpawn(hero,1)
+            if (hero.life==1){//game over
+              if (score > best) { //best score
+               best = score;
+              }
+              score = 0;
+              hero.life = 3
+              changeLife(hero.life);
+            } else {
+             score -= Math.round(Math.sqrt(score)) - 2
+             hero.life -= 1;
+             changeLife(hero.life);
+            }
+            hero.revivalPts = 0;
+            normalSpawn(ennemi, canvas.width / 2);//only work if square canvas !
+            normalSpawn(hero,1);
           }
         }
         if (thief.exists) { //thief
@@ -233,12 +253,10 @@
         if (powerUp.spawn > PowerUpspawnRate) {
           if (collision(powerUp, hero)) {
             score += 5
+            hero.revivalPts += 5
             randomSpawn(powerUp)
             powerUp.spawn = Math.random()
           }
-        }
-        if (score > best) { //best score
-          best = score
         }
         if (best - score >= 5) {
           PowerUpspawnRate = 0.5
@@ -268,7 +286,7 @@
           drawSquare(powerUp)
         }
         ctx.fillStyle = 'white'
-        ctx.fillText("score: " + score, canvas.width / 2, 20 * ratio)
+        ctx.fillText("score: " + score + "  life: " + hero.life, canvas.width / 2 - 40, 20 * ratio)
         if (score < best) {
           ctx.fillText("best: " + best, 5 * ratio, canvas.height - 10 * ratio)
         }
@@ -277,6 +295,11 @@
       function drawSquare(object) {
         ctx.fillStyle = object.color
         ctx.fillRect(object.x, object.y, object.width, object.height)
+      }
+
+      function changeLife(life) {
+        hero.height = (8 * life + 1) * ratio;
+        hero.width = (8 * life + 1) * ratio;
       }
 
       function setPause() {//function pause
